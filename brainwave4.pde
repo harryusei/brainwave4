@@ -58,7 +58,7 @@ void setup(){
 
 void draw(){
 
-  //この中に，画像の処理を書く
+  //Write image process code here
   
 }
 
@@ -71,7 +71,7 @@ void oscEvent(OscMessage msg){
       buffer[ch][pointer] = data;
 
 
-      float freq = map(mouseY, -1, 1, min_hz, max_hz);
+      float freq = map(buffer[ch][pointer], -1, 1, min_hz, max_hz);
       sine.setFreq(freq);
     }
     pointer = (pointer + 1) % BUFFER_SIZE;
