@@ -9,3 +9,4 @@
 ## Developers
 * Yusei Harigaya
 * Ken Maeda
+* Yoshiko Hirose
