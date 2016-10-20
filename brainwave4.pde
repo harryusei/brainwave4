@@ -1,4 +1,3 @@
-
 import oscP5.*;
 import netP5.*;
 import ddf.minim.*;
@@ -45,12 +44,19 @@ void setup(){
 
   minim = new Minim(this);
   out = minim.getLineOut(Minim.STEREO);
-  sine0 = new SineWave(0, 0.5, out.sampleRate());
-  sine1 = new SineWave(0, 0.5, out.sampleRate());
-  sine2 = new SineWave(0, 0.5, out.sampleRate());
-  sine3 = new SineWave(0, 0.5, out.sampleRate());
-  sine.portamento(200);
-  out.addSignal(sine);
+  sine0 = new SineWave(261.6, 0.5, out.sampleRate());
+  sine1 = new SineWave(329.6, 0.5, out.sampleRate());
+  sine2 = new SineWave(392, 0.5, out.sampleRate());
+  sine3 = new SineWave(493.9, 0.5, out.sampleRate());
+  sine0.portamento(200);
+  sine1.portamento(200);
+  sine2.portamento(200);
+  sine3.portamento(200);
+  out.addSignal(sine0);
+  out.addSignal(sine1);
+  out.addSignal(sine2);
+  out.addSignal(sine3);
+  
 
 }
 
