@@ -6,22 +6,17 @@ import ddf.minim.signals.*;
 
 Minim minim;
 AudioOutput out;
-SineWave sine;
+SineWave sine0;
+SineWave sine1;
+SineWave sine2;
+SineWave sine3;
 
 
 final int N_CHANNELS = 4;
 final int BUFFER_SIZE = 220;
 final float MAX_MICROVOLTS = 1682.815;
 final float DISPLAY_SCALE = 200.0;
-final String[] LABELS = new String[] {
-  "TP9", "FP1", "FP2", "TP10"
-};
-
 final color BG_COLOR = color(0, 0, 0);
-final color AXIS_COLOR = color(255, 0, 0);
-final color GRAPH_COLOR = color(0, 0, 255);
-final color LABEL_COLOR = color(255, 255, 0);
-final int LABEL_SIZE = 21;
 
 final int PORT = 5000;
 OscP5 oscP5 = new OscP5(this, PORT);
@@ -50,7 +45,10 @@ void setup(){
 
   minim = new Minim(this);
   out = minim.getLineOut(Minim.STEREO);
-  sine = new SineWave(440, 0.5, out.sampleRate());
+  sine0 = new SineWave(0, 0.5, out.sampleRate());
+  sine1 = new SineWave(0, 0.5, out.sampleRate());
+  sine2 = new SineWave(0, 0.5, out.sampleRate());
+  sine3 = new SineWave(0, 0.5, out.sampleRate());
   sine.portamento(200);
   out.addSignal(sine);
 
@@ -62,6 +60,7 @@ void draw(){
   
 }
 
+
 void oscEvent(OscMessage msg){
   float data;
   if(msg.checkAddrPattern("/muse/eeg")){
@@ -72,7 +71,20 @@ void oscEvent(OscMessage msg){
 
 
       float freq = map(buffer[ch][pointer], -1, 1, min_hz, max_hz);
-      sine.setFreq(freq);
+      switch (ch) {
+        case 0:
+          sine0.setFreq(freq);
+          break;
+        case 1:
+          sine1.setFreq(freq);
+          break;
+        case 2:
+          sine2.setFreq(freq);
+          break;
+        case 3:
+          sine3.setFreq(freq);
+          break;
+      }
     }
     pointer = (pointer + 1) % BUFFER_SIZE;
   }
