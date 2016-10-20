@@ -1,5 +1,7 @@
 import oscP5.*;
 import netP5.*;
+import ddf.minim.*;
+import ddf.minim.signals.*;
 
 final int N_CHANNELS = 4;
 final int BUFFER_SIZE = 220;
