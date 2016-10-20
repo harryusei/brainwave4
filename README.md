@@ -8,3 +8,4 @@
 
 ## Developers
 * Yusei Harigaya
+* Ken Maeda
