@@ -26,7 +26,7 @@ void draw() {
         float w = width / float(fft.specSize()) / 2;
         fill(h, 80, 80, 7);
         ellipse(x, height/2, ellipseSize, ellipseSize);
-}
+    }
     fft.forward(in.right);
     for (int i = 0; i < fft.specSize(); i++) {
         float h = map(i, 0, fft.specSize(), 0, 180);
@@ -35,7 +35,8 @@ void draw() {
         float w = width / float(fft.specSize()) / 2;
         fill(h, 80, 80, 7);
         ellipse(x, height/2, ellipseSize, ellipseSize);
-} }
+     } 
+}
 void stop() {
     minim.stop();
     super.stop();
