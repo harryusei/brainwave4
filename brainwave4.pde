@@ -35,19 +35,13 @@ void setup(){
   size(1000, 600);
   frameRate(30);
   smooth();
-  for(int ch = 0; ch < N_CHANNELS; ch++){
-    offsetX[ch] = (width / N_CHANNELS) * ch + 15;
-    offsetY[ch] = height / 2;
-  }
-
-
 
   minim = new Minim(this);
   out = minim.getLineOut(Minim.STEREO);
   sine0 = new SineWave(261.6, 0.5, out.sampleRate());
-  sine1 = new SineWave(329.6, 0.5, out.sampleRate());
-  sine2 = new SineWave(392, 0.5, out.sampleRate());
-  sine3 = new SineWave(493.9, 0.5, out.sampleRate());
+  sine1 = new SineWave(0, 0.5, out.sampleRate());
+  sine2 = new SineWave(0, 0.5, out.sampleRate());
+  sine3 = new SineWave(0, 0.5, out.sampleRate());
   sine0.portamento(200);
   sine1.portamento(200);
   sine2.portamento(200);
@@ -69,14 +63,12 @@ void draw(){
 
 void oscEvent(OscMessage msg){
   float data;
-  if(msg.checkAddrPattern("/muse/eeg")){
+  if(msg.checkAddrPattern("/muse/elements/alpha_relative")){
     for(int ch = 0; ch < N_CHANNELS; ch++){
       data = msg.get(ch).floatValue();
-      data = (data - (MAX_MICROVOLTS / 2)) / (MAX_MICROVOLTS / 2); // -1.0 1.0
       buffer[ch][pointer] = data;
-
-
-      float freq = map(buffer[ch][pointer], -1, 1, min_hz, max_hz);
+      float freq = map(buffer[ch][pointer], 0, 1, min_hz, max_hz);
+      print(ch + "-" + freq + "  ");
       switch (ch) {
         case 0:
           sine0.setFreq(freq);
@@ -101,6 +93,5 @@ void oscEvent(OscMessage msg){
 void stop() {
     out.close();
     minim.stop();
-
     super.stop();
   }
