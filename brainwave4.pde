@@ -95,3 +95,39 @@ void stop() {
     minim.stop();
     super.stop();
   }
+  
+  
+  
+  
+  
+/*
+//idea of filtering in "oscEvent"
+
+
+void oscEvent(OscMessage msg){
+  float data;
+  if(msg.checkAddrPattern("/muse/elements/alpha_relative")){
+    for(int ch = 0; ch < N_CHANNELS; ch++){
+      data = msg.get(ch).floatValue();
+      buffer[ch][pointer] = data;
+      float freq = map(buffer[ch][pointer], 0, 1, min_hz, max_hz);
+      print(ch + "-" + freq + "  ");
+
+          sine0.setFreq(freq); //should write below?
+    }
+
+    if (p >= 4) {
+      y[p-2] = (y[p-4] + ... + y[p])/5;
+      sine1.setFreq(y[p-2]);
+    }
+    else {
+      y[p] = y[p];
+    } 
+
+    pointer = (pointer + 1) % BUFFER_SIZE;
+    p++;
+  }
+
+}
+
+*/
