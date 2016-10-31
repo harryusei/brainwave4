@@ -42,9 +42,8 @@ void setup(){
   
 }
 
-
+int counter = 0;  // 3回のループ
 void draw(){
-  int counter = 0;  // 3回のループ
   float setFreq = ((3 - counter) * sumBuffer[pointer - 1] + counter * sumBuffer[pointer]) / 3;
   sine.setFreq(setFreq);
   counter = (counter + 1) % 3;
