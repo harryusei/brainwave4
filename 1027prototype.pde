@@ -42,13 +42,31 @@ void setup(){
   
 }
 
-int counter = 0;  // 3回のループ
+int counter = 0;  // 3回のループ用
+
+// この中擬似脳波(マウスの位置による初期設定、本番は消す
+sumBuffer[0] = min_hz;
+sumBuffer[1] = min_hz;
+pointer = 1;
+// ここまで
+
 void draw(){
+
+  // この中擬似脳波(マウスの位置による)用プログラム、本番は消す
+  // ウィンドウの上端がmax_hz, 下端がmin_hzに対応
+  if(counter = 2){
+    float freq = map(mouseY, 600, 0, min_hz, max_hz);
+    sumBuffer[pointer + 1] = freq;
+    pointer = (pointer + 1) % BUFFER_SIZE;
+  }
+  // ここまで
+
   float setFreq = ((3 - counter) * sumBuffer[pointer - 1] + counter * sumBuffer[pointer]) / 3;
   sine.setFreq(setFreq);
   counter = (counter + 1) % 3;
 }
 
+/* museが使えないため一旦コメントアウト
 void oscEvent(OscMessage msg){
   float data;
   float sumFreq = 0;
@@ -66,6 +84,7 @@ void oscEvent(OscMessage msg){
     pointer = (pointer + 1) % BUFFER_SIZE;
   }
 }
+*/
 
 void stop() {
     out.close();
