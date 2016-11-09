@@ -7,6 +7,8 @@ Minim minim;
 AudioOutput out;
 SineWave sine;
 
+AudioPlayer bgm;
+float vol;
 
 final int N_CHANNELS = 4;
 final int FRAME_RATE = 30;
@@ -32,13 +34,18 @@ float[] sumBuffer = new float[BUFFER_SIZE];
 void setup(){
   size(1000, 600);
   frameRate(30);
-  smooth();
+  //smooth();
 
   minim = new Minim(this);
   out = minim.getLineOut(Minim.STEREO);
-  sine = new SineWave(261.6, 0.5, out.sampleRate());
+  sine = new SineWave(261.6, 0.1, out.sampleRate());
   sine.portamento(200);
   out.addSignal(sine);
+
+  bgm = minim.loadFile("brainWaveBgm.mp3");
+  bgm.play();
+  vol = -30;
+  bgm.setGain(vol);
   
 }
 
@@ -67,6 +74,9 @@ pointer = 1;
   float setFreq = ((3 - counter) * sumBuffer[pointer - 1] + counter * sumBuffer[pointer]) / 3;
   sine.setFreq(setFreq);
   counter = (counter + 1) % 3;
+  
+  vol = map(mouseY, 600, 0, -30, -10);
+  bgm.setGain(vol);
 }
 
 /* museが使えないため一旦コメントアウト
@@ -91,6 +101,7 @@ void oscEvent(OscMessage msg){
 
 void stop() {
     out.close();
+    bgm.close();
     minim.stop();
     super.stop();
   }

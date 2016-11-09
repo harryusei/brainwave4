@@ -5,14 +5,14 @@ import ddf.minim.signals.*;
 
 Minim minim;
 AudioOutput out;
-SineWave sine0;
-SineWave sine1;
-SineWave sine2;
-SineWave sine3;
+SineWave sine;
 
+AudioPlayer bgm;
+float vol;
 
 final int N_CHANNELS = 4;
-final int BUFFER_SIZE = 220;
+final int FRAME_RATE = 30;
+final int BUFFER_SIZE = 100;
 final float MAX_MICROVOLTS = 1682.815;
 final float DISPLAY_SCALE = 200.0;
 final color BG_COLOR = color(0, 0, 0);
@@ -27,107 +27,78 @@ final float min_hz = 220;
 
 float[][] buffer = new float[N_CHANNELS][BUFFER_SIZE];
 int pointer = 0;
-float[] offsetX = new float[N_CHANNELS];
-float[] offsetY = new float[N_CHANNELS];
 
+float[] freq = new float[N_CHANNELS];
+float[] sumBuffer = new float[BUFFER_SIZE];
 
 void setup(){
   size(1000, 600);
   frameRate(30);
-  smooth();
+  //smooth();
 
   minim = new Minim(this);
   out = minim.getLineOut(Minim.STEREO);
-  sine0 = new SineWave(261.6, 0.5, out.sampleRate());
-  sine1 = new SineWave(0, 0.5, out.sampleRate());
-  sine2 = new SineWave(0, 0.5, out.sampleRate());
-  sine3 = new SineWave(0, 0.5, out.sampleRate());
-  sine0.portamento(200);
-  sine1.portamento(200);
-  sine2.portamento(200);
-  sine3.portamento(200);
-  out.addSignal(sine0);
-  out.addSignal(sine1);
-  out.addSignal(sine2);
-  out.addSignal(sine3);
-  
+  sine = new SineWave(261.6, 0.5, out.sampleRate());
+  sine.portamento(200);
+  out.addSignal(sine);
 
+  bgm = minim.loadFile("brainWaveBgm.mp3");
+  bgm.play();
+  vol = 10;
+  bgm.setGain(vol);
+  
 }
+
+int counter = 0;  // 3回のループ用
+
+/* この中擬似脳波(マウスの位置による初期設定、本番は消す
+sumBuffer[0] = 220;
+sumBuffer[1] = 220;
+pointer = 1;
+ ここまで
+*/
 
 void draw(){
-
-  //Write image process code here
-  
-}
-
-
-void oscEvent(OscMessage msg){
-  float data;
-  if(msg.checkAddrPattern("/muse/elements/alpha_relative")){
-    for(int ch = 0; ch < N_CHANNELS; ch++){
-      data = msg.get(ch).floatValue();
-      buffer[ch][pointer] = data;
-      float freq = map(buffer[ch][pointer], 0, 1, min_hz, max_hz);
-      print(ch + "-" + freq + "  ");
-      switch (ch) {
-        case 0:
-          sine0.setFreq(freq);
-          break;
-        case 1:
-          sine1.setFreq(freq);
-          break;
-        case 2:
-          sine2.setFreq(freq);
-          break;
-        case 3:
-          sine3.setFreq(freq);
-          break;
-      }
-    }
+sumBuffer[0] = 220;
+sumBuffer[1] = 220;
+pointer = 1;
+  // この中擬似脳波(マウスの位置による)用プログラム、本番は消す
+  // ウィンドウの上端がmax_hz, 下端がmin_hzに対応
+  if(counter == 2){
+    float freq = map(mouseY, 600, 0, min_hz, max_hz);
+    sumBuffer[pointer + 1] = freq;
     pointer = (pointer + 1) % BUFFER_SIZE;
   }
+  // ここまで
 
+  float setFreq = ((3 - counter) * sumBuffer[pointer - 1] + counter * sumBuffer[pointer]) / 3;
+  sine.setFreq(setFreq);
+  counter = (counter + 1) % 3;
 }
 
+/* museが使えないため一旦コメントアウト
+void oscEvent(OscMessage msg){
+  float data;
+  float sumFreq = 0;
+  if(msg.checkAddrPattern("/muse/elements/alpha_relative")){
+      for(int ch = 0; ch < N_CHANNELS; ch++){
+        data = msg.get(ch).floatValue();
+          buffer[ch][pointer] = data;
+          freq[ch] = map(buffer[ch][pointer], 0, 1, min_hz, max_hz);
+          sumFreq = sumFreq + freq[ch];
+      }
+      sumBuffer[pointer] = sumFreq;        // 4チャンネルの波の単純合計
+
+      // ここに平滑化処理
+
+    pointer = (pointer + 1) % BUFFER_SIZE;
+  }
+}
+*/
 
 void stop() {
     out.close();
+    bgm.close();
     minim.stop();
     super.stop();
   }
-  
-  
-  
-  
-  
-/*
-//idea of filtering in "oscEvent"
-
-
-void oscEvent(OscMessage msg){
-  float data;
-  if(msg.checkAddrPattern("/muse/elements/alpha_relative")){
-    for(int ch = 0; ch < N_CHANNELS; ch++){
-      data = msg.get(ch).floatValue();
-      buffer[ch][pointer] = data;
-      float freq = map(buffer[ch][pointer], 0, 1, min_hz, max_hz);
-      print(ch + "-" + freq + "  ");
-
-          sine0.setFreq(freq); //should write below?
-    }
-
-    if (p >= 4) {
-      y[p-2] = (y[p-4] + ... + y[p])/5;
-      sine1.setFreq(y[p-2]);
-    }
-    else {
-      y[p] = y[p];
-    } 
-
-    pointer = (pointer + 1) % BUFFER_SIZE;
-    p++;
-  }
-
-}
-
-*/
