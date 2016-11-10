@@ -10,8 +10,8 @@ SineWave sine;
 AudioPlayer bgm;
 float vol;
 
-float[] rot = new float[BUFSIZE]; //角度を保存 
-float[] rotSpeed = new float[BUFSIZE]; //角速度
+float[] rot = new float[BUFFER_SIZE]; //角度を保存 
+float[] rotSpeed = new float[BUFFER_SIZE]; //角速度
 
 final int N_CHANNELS = 4;
 final int FRAME_RATE = 30;
