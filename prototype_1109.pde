@@ -90,3 +90,10 @@ void oscEvent(OscMessage msg){
 
   }
 }
+
+
+void stop() {
+    out.close();
+    minim.stop();
+    super.stop();
+}
