@@ -7,6 +7,8 @@ Minim minim;
 AudioOutput out;
 SineWave sine;
 
+AudioPlayer bgm;
+float vol;
 
 final int N_CHANNELS = 4;
 final int FRAME_RATE = 30;
@@ -39,6 +41,11 @@ void setup(){
   sine = new SineWave(261.6, 0.5, out.sampleRate());
   sine.portamento(200);
   out.addSignal(sine);
+
+  bgm = minim.loadFile("brainWaveBgm.mp3");
+  bgm.play();
+  vol = -30;
+  bgm.setGain(vol);
   
 }
 
@@ -58,19 +65,23 @@ void oscEvent(OscMessage msg){
           freq[ch] = map(buffer[ch][pointer], 0, 1, min_hz, max_hz);
           sumBuffer[pointer] += freq[ch];
       }
-      sumBuffer[pointer] = sumBuffer[pointer];        // 4チャンネルの波の単純合計
+      sumBuffer[pointer] = sumBuffer[pointer] / 4;        // 4チャンネルの波の単純合計
       println(sumBuffer[pointer]);
       // ここに平滑化処理
       if (pointer >= 4 && count == 0) {
         sumBuffer[pointer-2] = (sumBuffer[pointer-4] + sumBuffer[pointer-3] 
           + sumBuffer[pointer-2] + sumBuffer[pointer-1] + sumBuffer[pointer])/5;
         sine.setFreq(sumBuffer[pointer-2]);
+        vol = map(sumBuffer[pointer-2], min_hz, max_hz, -30, -10);
+        bgm.setGain(vol);
         count++;
       }
       else if (pointer >= 4 && count!=0) {
         sumBuffer[pointer-2] = (sumBuffer[pointer-4] + sumBuffer[pointer-3] 
           + sumBuffer[pointer-2] + sumBuffer[pointer-1] + sumBuffer[pointer])/5;
         sine.setFreq(sumBuffer[pointer-2]);
+        vol = map(sumBuffer[pointer-2], min_hz, max_hz, -30, -10);
+        bgm.setGain(vol);
       }
       else if (pointer < 4 && count!=0){
         int r = (pointer+BUFFER_SIZE-2)%BUFFER_SIZE;
@@ -84,6 +95,8 @@ void oscEvent(OscMessage msg){
         3         1
         */
         sine.setFreq(sumBuffer[r]);
+        vol = map(sumBuffer[r], min_hz, max_hz, -30, -10);
+        bgm.setGain(vol);
       }
 
     pointer = (pointer + 1) % BUFFER_SIZE;
@@ -94,6 +107,7 @@ void oscEvent(OscMessage msg){
 
 void stop() {
     out.close();
+    bgm.close();
     minim.stop();
     super.stop();
 }
