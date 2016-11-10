@@ -64,6 +64,19 @@ void draw(){
   backgroundFade();
   blendMode(ADD);
   translate(width/2, height/2);
+
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    float h = map(sumBuffer[i], min_hz, max_hz, 0, 100);
+      float x = map(sumBuffer[i], min_hz, max_hz, 0, 800); //width
+      float size = map(sumBuffer[i], 0, 10.0, 0, 0.2);
+      rotSpeed[i] = size;
+      rot[i] += rotSpeed[i];
+      pushMatrix();
+      rotate(radians(rot[i]));
+      fill(h, 80, 100, 100);
+      ellipse(x, 0, size, size);
+      popMatrix();
+  }
 }
 
 int count = 0;
@@ -109,10 +122,10 @@ void oscEvent(OscMessage msg){
       sine.setFreq(sumBuffer[p]);
       vol = map(sumBuffer[p], min_hz, max_hz, -30, 10);
       bgm.setGain(vol);
-
+      /*
       float h = map(sumBuffer[p], min_hz, max_hz, 0, 100);
       float x = map(sumBuffer[p], min_hz, max_hz, 0, 800); //width
-      float size = map(sumBuffer[p], 0, 1.0, 0, 0.2);
+      float size = map(sumBuffer[p], 0, 10.0, 0, 0.2);
       rotSpeed[p] = size;
       rot[p] += rotSpeed[p];
       pushMatrix();
@@ -120,7 +133,7 @@ void oscEvent(OscMessage msg){
       fill(h, 80, 100, 100);
       ellipse(x, 0, size, size);
       popMatrix();
-
+      */
     pointer = (pointer + 1) % BUFFER_SIZE;
 
   }
