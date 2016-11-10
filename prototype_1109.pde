@@ -32,7 +32,7 @@ float[] sumBuffer = new float[BUFFER_SIZE];
 void setup(){
   size(1000, 600);
   frameRate(30);
-  //smooth();
+  smooth();
 
   minim = new Minim(this);
   out = minim.getLineOut(Minim.STEREO);
@@ -58,19 +58,19 @@ void oscEvent(OscMessage msg){
           freq[ch] = map(buffer[ch][pointer], 0, 1, min_hz, max_hz);
           sumBuffer[pointer] += freq[ch];
       }
-      sumBuffer[pointer] = sumBuffer[pointer] / N_CHANNELS;        // 4チャンネルの波の単純合計
-
+      sumBuffer[pointer] = sumBuffer[pointer];        // 4チャンネルの波の単純合計
+      println(sumBuffer[pointer]);
       // ここに平滑化処理
       if (pointer >= 4 && count == 0) {
         sumBuffer[pointer-2] = (sumBuffer[pointer-4] + sumBuffer[pointer-3] 
           + sumBuffer[pointer-2] + sumBuffer[pointer-1] + sumBuffer[pointer])/5;
-        sine1.setFreq(sumBuffer[pointer-2]);
+        sine.setFreq(sumBuffer[pointer-2]);
         count++;
       }
       else if (pointer >= 4 && count!=0) {
         sumBuffer[pointer-2] = (sumBuffer[pointer-4] + sumBuffer[pointer-3] 
           + sumBuffer[pointer-2] + sumBuffer[pointer-1] + sumBuffer[pointer])/5;
-        sine1.setFreq(sumBuffer[pointer-2]);
+        sine.setFreq(sumBuffer[pointer-2]);
       }
       else if (pointer < 4 && count!=0){
         int r = (pointer+BUFFER_SIZE-2)%BUFFER_SIZE;
@@ -83,17 +83,10 @@ void oscEvent(OscMessage msg){
         2         0
         3         1
         */
-        sine1.setFreq(sumBuffer[r]);
+        sine.setFreq(sumBuffer[r]);
       }
 
     pointer = (pointer + 1) % BUFFER_SIZE;
 
   }
-}
-
-
-void stop() {
-    out.close();
-    minim.stop();
-    super.stop();
 }
