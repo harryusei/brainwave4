@@ -10,15 +10,15 @@ SineWave sine;
 AudioPlayer bgm;
 float vol;
 
-float[] rot = new float[BUFFER_SIZE]; //角度を保存 
-float[] rotSpeed = new float[BUFFER_SIZE]; //角速度
-
 final int N_CHANNELS = 4;
 final int FRAME_RATE = 30;
 final int BUFFER_SIZE = 100;
 final float MAX_MICROVOLTS = 1682.815;
 final float DISPLAY_SCALE = 200.0;
 final color BG_COLOR = color(0, 0, 0);
+
+float[] rot = new float[BUFFER_SIZE]; //角度を保存 
+float[] rotSpeed = new float[BUFFER_SIZE]; //角速度
 
 final int PORT = 5000;
 OscP5 oscP5 = new OscP5(this, PORT);
@@ -113,10 +113,10 @@ void oscEvent(OscMessage msg){
       float h = map(sumBuffer[p], min_hz, max_hz, 0, 100);
       float x = map(sumBuffer[p], min_hz, max_hz, 0, 800); //width
       float size = map(sumBuffer[p], 0, 1.0, 0, 0.2);
-      rotSpeed[i] = size;
-      rot[i] += rotSpeed[i];
+      rotSpeed[p] = size;
+      rot[p] += rotSpeed[p];
       pushMatrix();
-      rotate(radians(rot[i]));
+      rotate(radians(rot[p]));
       fill(h, 80, 100, 100);
       ellipse(x, 0, size, size);
       popMatrix();
