@@ -21,7 +21,7 @@ final int PORT = 5000;
 OscP5 oscP5 = new OscP5(this, PORT);
 
 
-final float max_hz = 1760;
+final float max_hz = 1000;
 final float min_hz = 220;
 
 
@@ -38,45 +38,23 @@ void setup(){
 
   minim = new Minim(this);
   out = minim.getLineOut(Minim.STEREO);
-  sine = new SineWave(261.6, 0.5, out.sampleRate());
+  sine = new SineWave(261.6, 0.1, out.sampleRate());
   sine.portamento(200);
   out.addSignal(sine);
 
   bgm = minim.loadFile("brainWaveBgm.mp3");
   bgm.play();
-  vol = 10;
+  vol = -30;
   bgm.setGain(vol);
   
 }
 
-int counter = 0;  // 3回のループ用
-
-/* この中擬似脳波(マウスの位置による初期設定、本番は消す
-sumBuffer[0] = 220;
-sumBuffer[1] = 220;
-pointer = 1;
- ここまで
-*/
 
 void draw(){
-sumBuffer[0] = 220;
-sumBuffer[1] = 220;
-pointer = 1;
-  // この中擬似脳波(マウスの位置による)用プログラム、本番は消す
-  // ウィンドウの上端がmax_hz, 下端がmin_hzに対応
-  if(counter == 2){
-    float freq = map(mouseY, 600, 0, min_hz, max_hz);
-    sumBuffer[pointer + 1] = freq;
-    pointer = (pointer + 1) % BUFFER_SIZE;
-  }
-  // ここまで
 
-  float setFreq = ((3 - counter) * sumBuffer[pointer - 1] + counter * sumBuffer[pointer]) / 3;
-  sine.setFreq(setFreq);
-  counter = (counter + 1) % 3;
 }
 
-/* museが使えないため一旦コメントアウト
+int count = 0;
 void oscEvent(OscMessage msg){
   float data;
   float sumFreq = 0;
@@ -85,20 +63,51 @@ void oscEvent(OscMessage msg){
         data = msg.get(ch).floatValue();
           buffer[ch][pointer] = data;
           freq[ch] = map(buffer[ch][pointer], 0, 1, min_hz, max_hz);
-          sumFreq = sumFreq + freq[ch];
+          sumBuffer[pointer] += freq[ch];
       }
-      sumBuffer[pointer] = sumFreq;        // 4チャンネルの波の単純合計
-
+      sumBuffer[pointer] = sumBuffer[pointer] / 4;        // 4チャンネルの波の単純合計
+      println(sumBuffer[pointer]);
       // ここに平滑化処理
+      if (pointer >= 4 && count == 0) {
+        sumBuffer[pointer-2] = (sumBuffer[pointer-4] + sumBuffer[pointer-3] 
+          + sumBuffer[pointer-2] + sumBuffer[pointer-1] + sumBuffer[pointer])/5;
+        sine.setFreq(sumBuffer[pointer-2]);
+        vol = map(sumBuffer[pointer-2], min_hz, max_hz, -30, 10);
+        bgm.setGain(vol);
+        count++;
+      }
+      else if (pointer >= 4 && count!=0) {
+        sumBuffer[pointer-2] = (sumBuffer[pointer-4] + sumBuffer[pointer-3] 
+          + sumBuffer[pointer-2] + sumBuffer[pointer-1] + sumBuffer[pointer])/5;
+        sine.setFreq(sumBuffer[pointer-2]);
+        vol = map(sumBuffer[pointer-2], min_hz, max_hz, -30, 10);
+        bgm.setGain(vol);
+      }
+      else if (pointer < 4 && count!=0){
+        int r = (pointer+BUFFER_SIZE-2)%BUFFER_SIZE;
+        sumBuffer[r] = (sumBuffer[(r+BUFFER_SIZE-2)%BUFFER_SIZE] + sumBuffer[(r+BUFFER_SIZE-1)%BUFFER_SIZE] + 
+          sumBuffer[r] + sumBuffer[(r+BUFFER_SIZE+1)%BUFFER_SIZE] + sumBuffer[(r+BUFFER_SIZE+2)%BUFFER_SIZE])/5;
+        /*
+        pointer   pointerの2つ前の配列インデックス
+        0         98
+        1         99
+        2         0
+        3         1
+        */
+        sine.setFreq(sumBuffer[r]);
+        vol = map(sumBuffer[r], min_hz, max_hz, -30, 10);
+        bgm.setGain(vol);
+      }
 
     pointer = (pointer + 1) % BUFFER_SIZE;
+
   }
 }
-*/
+
 
 void stop() {
     out.close();
     bgm.close();
     minim.stop();
     super.stop();
-  }
+}
