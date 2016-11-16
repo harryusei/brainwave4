@@ -20,8 +20,14 @@ final color BG_COLOR = color(0, 0, 0);
 FFT fft;
 float[] rot = new float[BUFFER_SIZE]; //角度を保存 
 float[] rotSpeed = new float[BUFFER_SIZE]; //角速度
-float[] rotb = new float[BUFFER_SIZE];
-float[] rotSpeedb = new float[BUFFER_SIZE]; //角速度
+
+// rotbはBGM用の回転角、角速度をためるバッファ
+// この配列のサイズがfft.specSizeに足りていなかったため
+// fft.forwardの次のfor文でoutOfBoundsExceptionのエラーを吐いたと思われる
+// 参考プログラムを見る限りfft.specSize = BUFSIZEなのでこれによりバッファサイズ確保
+final int BUFSIZE = 513;
+float[] rotb = new float[BUFSIZE];
+float[] rotSpeedb = new float[BUFSIZE]; //角速度
 
 final int PORT = 5000;
 OscP5 oscP5 = new OscP5(this, PORT);
@@ -60,7 +66,7 @@ void setup(){
   bgm.play();
   vol = -30;
   bgm.setGain(vol);
-  
+
 }
 
 
@@ -69,8 +75,8 @@ void draw(){
   blendMode(ADD);
   translate(width/2, height/2);
 
-  for (int i = pointer; i < pointer + 10; i++) {
-    int j = i % BUFFER_SIZE;
+  for (int i = pointer; i > pointer - 10; i--) {
+    int j = (i + BUFFER_SIZE) % BUFFER_SIZE;
     float h = map(sumBuffer[j], min_hz, max_hz, 0, 100);
     float x = map(sumBuffer[j], min_hz, max_hz, 0, 800); //width
     float size = map(sumBuffer[j], 0, 10.0, 0, 0.2);
