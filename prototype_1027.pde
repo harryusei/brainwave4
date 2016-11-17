@@ -24,7 +24,7 @@ float[] rotSpeed = new float[BUFFER_SIZE]; //角速度
 // rotbはBGM用の回転角、角速度をためるバッファ
 // この配列のサイズがfft.specSizeに足りていなかったため
 // fft.forwardの次のfor文でoutOfBoundsExceptionのエラーを吐いたと思われる
-// 参考プログラムを見る限りfft.specSize = BUFSIZEなのでこれによりバッファサイズ確保
+// 参考プログラムを見る限りfft.specSize = BUFSIZE(513)なのでこれによりバッファサイズ確保
 final int BUFSIZE = 513;
 float[] rotb = new float[BUFSIZE];
 float[] rotSpeedb = new float[BUFSIZE]; //角速度
@@ -77,8 +77,8 @@ void draw(){
 
   for (int i = pointer; i > pointer - 10; i--) {
     int j = (i + BUFFER_SIZE) % BUFFER_SIZE;
-    float h = map(sumBuffer[j], min_hz, max_hz, 0, 100);
-    float x = map(sumBuffer[j], min_hz, max_hz, 0, 800); //width
+    float h = map(sumBuffer[j], min_hz, max_hz, 0, 360);
+    float x = map(sumBuffer[j] + pointer, min_hz, max_hz, 0, 800); //width
     float size = map(sumBuffer[j], 0, 10.0, 0, 0.2);
     rotSpeed[j] = size;
     rot[j] += rotSpeed[j];
@@ -147,7 +147,7 @@ void oscEvent(OscMessage msg){
       }
 
       sine.setFreq(sumBuffer[p]);
-      vol = map(sumBuffer[p], min_hz, max_hz, -30, 10);
+      vol = map(sumBuffer[p], min_hz, max_hz, -50, 0);
       bgm.setGain(vol);
       /*
       float h = map(sumBuffer[p], min_hz, max_hz, 0, 100);
