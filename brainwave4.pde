@@ -2,6 +2,7 @@ import oscP5.*;
 import netP5.*;
 import ddf.minim.*;
 import ddf.minim.signals.*;
+import ddf.minim.analysis.*;
 
 Minim minim;
 AudioOutput out;
@@ -17,6 +18,18 @@ final float MAX_MICROVOLTS = 1682.815;
 final float DISPLAY_SCALE = 200.0;
 final color BG_COLOR = color(0, 0, 0);
 
+FFT fft;
+float[] rot = new float[BUFFER_SIZE]; //角度を保存 
+float[] rotSpeed = new float[BUFFER_SIZE]; //角速度
+
+// rotbはBGM用の回転角、角速度をためるバッファ
+// この配列のサイズがfft.specSizeに足りていなかったため
+// fft.forwardの次のfor文でoutOfBoundsExceptionのエラーを吐いたと思われる
+// 参考プログラムを見る限りfft.specSize = BUFSIZE(513)なのでこれによりバッファサイズ確保
+final int BUFSIZE = 513;
+float[] rotb = new float[BUFSIZE];
+float[] rotSpeedb = new float[BUFSIZE]; //角速度
+
 final int PORT = 5000;
 OscP5 oscP5 = new OscP5(this, PORT);
 
@@ -27,14 +40,16 @@ final float min_hz = 220;
 
 float[][] buffer = new float[N_CHANNELS][BUFFER_SIZE];
 int pointer = 0;
+int p = 0;
 
 float[] freq = new float[N_CHANNELS];
 float[] sumBuffer = new float[BUFFER_SIZE];
 
 void setup(){
-  size(1000, 600);
+  size(800, 800);
   frameRate(30);
-  //smooth();
+  smooth();
+  colorMode(HSB, 360, 100, 100, 100);
 
   minim = new Minim(this);
   out = minim.getLineOut(Minim.STEREO);
@@ -42,20 +57,59 @@ void setup(){
   sine.portamento(200);
   out.addSignal(sine);
 
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    rot[i] = 0;
+    rotSpeed[i] = 0;
+  }
+
   bgm = minim.loadFile("brainWaveBgm.mp3");
+  fft = new FFT(bgm.bufferSize(), bgm.sampleRate());
   bgm.play();
   vol = -30;
   bgm.setGain(vol);
-  
+
 }
 
 
 void draw(){
+  backgroundFade();
+  blendMode(ADD);
+  translate(width/2, height/2);
 
+  for (int i = pointer; i > pointer - 10; i--) {
+    int j = (i + BUFFER_SIZE) % BUFFER_SIZE;
+    float h = map(sumBuffer[j], min_hz, max_hz, 0, 360);
+    float x = map(sumBuffer[j] + pointer, min_hz, max_hz, 0, 500); //width
+    float size = map(sumBuffer[j], 0, 10.0, 0, 0.2);
+    rotSpeed[j] = size;
+    rot[j] += rotSpeed[j];
+    pushMatrix();
+    rotate(radians(rot[j]));
+    fill(h, 80, 100, 100);
+    ellipse(x, 0, size, size);
+    popMatrix();
+  }
+
+  int specSize = fft.specSize();
+  fft.forward(bgm.left);
+  for (int i = 0; i < fft.specSize(); i++) {
+        float h = map(i, 0, fft.specSize(), 0, 10000);
+        float x = map(i, 0, fft.specSize(), 0, width*10);
+        float size = map(fft.getBand(i)*sumBuffer[pointer]/max_hz*1.5, 0, 1.0, 0, 0.2);
+        rotSpeedb[i] = size/2;
+        rotb[i] += rotSpeedb[i];
+        pushMatrix();
+        rotate(radians(rotb[i]));
+        fill(h, 80, 100, 100);
+        ellipse(x, 0, size, size);
+        popMatrix();
+    
+  }
 }
 
 int count = 0;
 void oscEvent(OscMessage msg){
+
   float data;
   float sumFreq = 0;
   if(msg.checkAddrPattern("/muse/elements/alpha_relative")){
@@ -71,17 +125,13 @@ void oscEvent(OscMessage msg){
       if (pointer >= 4 && count == 0) {
         sumBuffer[pointer-2] = (sumBuffer[pointer-4] + sumBuffer[pointer-3] 
           + sumBuffer[pointer-2] + sumBuffer[pointer-1] + sumBuffer[pointer])/5;
-        sine.setFreq(sumBuffer[pointer-2]);
-        vol = map(sumBuffer[pointer-2], min_hz, max_hz, -30, 10);
-        bgm.setGain(vol);
         count++;
+        p = pointer - 2;
       }
       else if (pointer >= 4 && count!=0) {
         sumBuffer[pointer-2] = (sumBuffer[pointer-4] + sumBuffer[pointer-3] 
           + sumBuffer[pointer-2] + sumBuffer[pointer-1] + sumBuffer[pointer])/5;
-        sine.setFreq(sumBuffer[pointer-2]);
-        vol = map(sumBuffer[pointer-2], min_hz, max_hz, -30, 10);
-        bgm.setGain(vol);
+        p = pointer - 2;
       }
       else if (pointer < 4 && count!=0){
         int r = (pointer+BUFFER_SIZE-2)%BUFFER_SIZE;
@@ -94,14 +144,23 @@ void oscEvent(OscMessage msg){
         2         0
         3         1
         */
-        sine.setFreq(sumBuffer[r]);
-        vol = map(sumBuffer[r], min_hz, max_hz, -30, 10);
-        bgm.setGain(vol);
+        p = r;
       }
+
+      sine.setFreq(sumBuffer[p]);
+      vol = map(sumBuffer[p], min_hz, max_hz, -30, 0);
+      bgm.setGain(vol);
 
     pointer = (pointer + 1) % BUFFER_SIZE;
 
   }
+}
+
+void backgroundFade() {
+  blendMode(BLEND);
+  noStroke();
+  fill(0, 0, 0, 5);
+  rect(0, 0, width, height);
 }
 
 
